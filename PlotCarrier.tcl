@@ -4,6 +4,10 @@ package require textutil
 
 set basedir D:/Development/FieldFox/tcl_scripts
 
+#set outfile [open "/etc/passwd" "w"]
+#puts $outfile "this is a bad test\n"
+#close $outfile
+
 source $basedir/envir.tcl
 source $basedir/settings.tcl
 source $basedir/N9912A.tcl
@@ -37,10 +41,7 @@ puts "N9912A SA Control"
 puts "Connecting via: $telnet to: $myhost"
 
 spawn $telnet $myhost
-
-expect "Welcome"
-WaitForPrompt
-puts "connected to $myhost\n"
+if { [Connect $myhost] == 0} return
 
 Init
 

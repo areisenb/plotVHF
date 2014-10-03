@@ -3,6 +3,20 @@ proc WaitForPrompt {} {
   #puts "Prompt Received <$expect_out(buffer)>"
 }
 
+proc Connect { myhost } {
+  expect {
+    "Welcome" { 
+      WaitForPrompt
+      puts "connected to $myhost\n"
+      return 1
+    }
+    timeout { 
+      puts "could not connect to $myhost\n"
+      return 0 
+    }
+  }
+}
+
 proc Init {} {
   SendCommand "TRAC1:TYPE CLRW" "Trace1 to clear/write" 0
   SendCommand "TRAC2:TYPE MAXH" "Trace2 to max" 0
@@ -19,7 +33,7 @@ proc StartMeasure {} {
   SendCommand "TRAC3:TYPE MINH" "Trace3 to min" 0
 }
 
-proc ReadValueOld {} {
+proc ReadValueOldAndVeryOld {} {
   SendCommand "CALC:MARK1:FUNC:MAX" "Setting Marker to the MAX" 0
   WaitForPrompt
   SendCommand "CALC:MARK1:X?" "Request X Value" 0
