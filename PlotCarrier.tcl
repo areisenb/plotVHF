@@ -2,7 +2,7 @@ package require Expect
 package require cmdline
 package require textutil
 
-set basedir D:/Development/Testprojects/FieldFox
+set basedir D:/Development/FieldFox/tcl_scripts
 
 source $basedir/envir.tcl
 source $basedir/settings.tcl
