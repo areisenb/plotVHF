@@ -4,9 +4,6 @@ package require textutil
 
 set basedir D:/Development/FieldFox/tcl_scripts
 
-#set outfile [open "/etc/passwd" "w"]
-#puts $outfile "this is a bad test\n"
-#close $outfile
 
 source $basedir/envir.tcl
 source $basedir/settings.tcl
@@ -45,17 +42,25 @@ if { [Connect $myhost] == 0} return
 
 Init
 
+set outFileName "[clock format [clock seconds] -format "%Y-%m-%dT%H_%M_%S"].csv"
+puts "Writing File $basedir/$outFileName\n"
+set outfile [open "$basedir/$outFileName" "w"]
+
+puts $outfile "time;frq max;maxLevel;frq min;minLevel"
+
 for { set nRepeat 5 } {$nRepeat>0} {incr nRepeat -1} {
   StartMeasure
   sleep 8
-  #ReadValueOld
   ReadMaxValue 2 nFreqMax nLevelMax
-  PlaceMarker 3 $nFreqMax
-  ReadValue 3 nFreqMin nLevelMin
-  set strClock [clock format [clock seconds] -format "%Y%m%d %H:%M:%S"]
+  ReadMaxValue 3 nFreqMin nLevelMin
+  set strClock [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%S"]
   puts "$strClock: [format "%f MHz" $nFreqMax] max: [format "%5.1f dBm" $nLevelMax] min: [format "%5.1f dBm" $nLevelMin]"
-
+  set strClock [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
+  puts -nonewline $outfile "$strClock;[format "%f" $nFreqMax];[format "%5.1f" $nLevelMax];"
+  puts $outfile "[format "%f" $nFreqMin];[format "%5.1f" $nLevelMin]"
 }
+
+close $outfile
 
 puts "**** READY FREDDY ***"
 expect "*"
