@@ -68,3 +68,50 @@ proc ReadMaxValue { nMarker nFreqMax nLevelMax} {
   ReadValue $nMarker nFreq nLevel
 }
 
+proc WaitForSignalAfterBreak { nFreqMin nFreqMax nMaxCarrierLevel nMinCarrierLevel } {
+  set nFrequMax 0.0
+  set nLevelMax -90.0
+  set bCarrierOn 1
+  set bAborted 0
+  global nDefTimeout
+  
+  SendCommand "TRAC1:TYPE CLRW" "Trace1 to clear/write" 0
+  SendCommand "TRAC2:TYPE BLAN" "Trace2 off" 0
+  SendCommand "TRAC3:TYPE BLAN" "Trace3 off" 0
+  SendCommand "TRAC4:TYPE BLAN" "Trace4 off" 0
+
+  SendCommand "FREQ:STAR $nFreqMin" "Setting Start Freq to $nFreqMin" 1
+  SendCommand "FREQ:STOP $nFreqMax" "Setting Stop Freq to $nFreqMax" 1
+  SendCommand "CALC:MARK1:TRAC 1" "Marker 1 to Trace 1" 0
+
+  #loop until carrier is gone - level is below MaxCarrier Level
+  while { $bCarrierOn > 0 } {
+    ReadMaxValue 1 nFreqMax nLevelMax
+	if { [ wasAborted $nDefTimeout ] > 0 } {
+	  set bAborted = 1
+	  break
+	}
+	if { $nLevelMax < $nMaxCarrierLevel } {
+	   set bCarrierOn 0
+	   puts "Carrier is OFF"
+	}
+  }
+	
+  if { $bAborted > 0 } {
+    return 1
+  }
+  
+  while { $bCarrierOn == 0 } {
+    ReadMaxValue 1 nFreqMax nLevelMax
+	if { [ wasAborted $nDefTimeout ] > 0 } {
+	  set bAborted = 1
+	  break
+	}
+	if { $nLevelMax > $nMinCarrierLevel } {
+	   set bCarrierOn 1
+	   puts "Carrier is ON"
+	} 
+  }	
+  return $bAborted
+}
+

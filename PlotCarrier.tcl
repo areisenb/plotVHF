@@ -7,6 +7,7 @@ set basedir D:/Development/FieldFox/tcl_scripts
 
 source $basedir/envir.tcl
 source $basedir/settings.tcl
+source $basedir/utils.tcl
 source $basedir/N9912A.tcl
 source $basedir/utlNMEA.tcl
 
@@ -25,7 +26,6 @@ proc SendCommand {cmd comment verbose} {
     send "$cmd \r\n"
     expect {
       $cmd { 
-        #puts "fine!" 
         set bDidWork 1
       }
       { 
@@ -43,7 +43,8 @@ set spwnN9912 $spawn_id
 
 if { [Connect $myhost] == 0} return
 
-Init
+spawn $telnet $gpsConn
+set spwnGPS $spawn_id
 
 set outFileName "[clock format [clock seconds] -format "%Y-%m-%dT%H_%M_%S"].csv"
 puts "Writing File $basedir/$outFileName\n"
@@ -51,37 +52,34 @@ set outfile [open "$basedir/$outFileName" "w"]
 
 puts $outfile "time;frq max;maxLevel;frq min;minLevel;GPSTime;Lat;Lon;Speed;Course;GPSValid"
 
-spawn $telnet $gpsConn
-set spwnGPS $spawn_id
+set spawn_id $spwnN9912
 
+if { [ WaitForSignalAfterBreak 868100000 868500000 -75 -70 ] == 0 } {
 
-for { set nRepeat 5 } {$nRepeat>0} {incr nRepeat -1} {
-  set spawn_id $spwnN9912
-  StartMeasure
-  sleep 8
-  ReadMaxValue 2 nFreqMax nLevelMax
-  ReadMaxValue 3 nFreqMin nLevelMin
+  Init
+
+  for { set nRepeat 5 } {$nRepeat>0} {incr nRepeat -1} {
+    StartMeasure
+    sleep 8
+    ReadMaxValue 2 nFreqMax nLevelMax
+    ReadMaxValue 3 nFreqMin nLevelMin
   
-  set spawn_id $spwnGPS
-  set bValid [ReadGPSPos fLat fLon fSpeed nCourse strDate strGPSDesc]
+    set spawn_id $spwnGPS
+    set bValid [ReadGPSPos fLat fLon fSpeed nCourse strDate strGPSDesc]
 
 
-  set strClock [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%S"]
-  puts "$strClock: [format "%f MHz" $nFreqMax] max: [format "%5.1f dBm" $nLevelMax] min: [format "%5.1f dBm" $nLevelMin]"
-  puts "$strGPSDesc"
-  set strClock [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
+    set strClock [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%S"]
+    puts "$strClock: [format "%f MHz" $nFreqMax] max: [format "%5.1f dBm" $nLevelMax] min: [format "%5.1f dBm" $nLevelMin]"
+    puts "$strGPSDesc"
+    set strClock [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
 
-  set strTempOut "$strClock;[format "%f" $nFreqMax];[format "%5.1f" $nLevelMax];"
-  append strTempOut "[format "%f" $nFreqMin];[format "%5.1f" $nLevelMin];"
-  append strTempOut "$strDate;[format "%f;%f;%f;%d;%d;" $fLat $fLon $fSpeed $nCourse $bValid]"
-  set strTempOut [ string map { . , } $strTempOut ] 
-  puts $outfile $strTempOut
-  
-  #puts -nonewline $outfile "$strClock;[format "%f" $nFreqMax];[format "%5.1f" $nLevelMax];"
-  #puts -nonewline $outfile "[format "%f" $nFreqMin];[format "%5.1f" $nLevelMin];"
-  #puts -nonewline $outfile "$strDate;[format "%f;%f;%f;%d;%d;" $fLat $fLon $fSpeed $nCourse $bValid]"
-  #puts $outfile "" 
-
+    set strTempOut "$strClock;[format "%f" $nFreqMax];[format "%5.1f" $nLevelMax];"
+    append strTempOut "[format "%f" $nFreqMin];[format "%5.1f" $nLevelMin];"
+    append strTempOut "$strDate;[format "%f;%f;%f;%d;%d;" $fLat $fLon $fSpeed $nCourse $bValid]"
+    set strTempOut [ string map { . , } $strTempOut ] 
+    puts $outfile $strTempOut
+    set spawn_id $spwnN9912
+  }
 }
 
 close $outfile
