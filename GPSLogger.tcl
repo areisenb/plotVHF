@@ -37,9 +37,9 @@ while { $bAborted == 0 } {
 	  break
 	}
 
-	set spawn_id $spwnN9912
 	EchoISO8601Date
 	if { $bUseN9912 > 0 } {
+      set spawn_id $spwnN9912
 	  puts "  Measuring"
       Init
 	  StartMeasure
@@ -69,7 +69,6 @@ while { $bAborted == 0 } {
 	set strTempOut [ string map { . , } $strTempOut ] 
 	puts $outfile $strTempOut
 	flush $outfile
-	set spawn_id $spwnN9912
 }
 
 close $outfile

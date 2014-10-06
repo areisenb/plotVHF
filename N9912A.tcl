@@ -15,6 +15,7 @@ proc Connect { myhost } {
       return 0 
     }
   }
+  return 0
 }
 
 proc Init {} {
