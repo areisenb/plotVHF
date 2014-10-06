@@ -68,7 +68,7 @@ proc ReadGPSPos { fLat fLon fSpeed nCourse strDate strDesc } {
     #}
     timeout {puts "no GPS minimum dataset received" }
   }
-  set strLocDesc "[format "%s Pos: %8.5f/%8.5f deg, Speed: %5.2f, Course: %3d" $strISO8601Date $fLocLat $fLocLon $fLocSpeed $nLocCourse]"
+  set strLocDesc "[format "Pos: %8.5f/%8.5f deg, Speed: %5.2f, Course: %3d GPSClk: %s" $fLocLat $fLocLon $fLocSpeed $nLocCourse $strISO8601Date]"
   if { $bValid == 0 } { append strLocDesc " INVALID!!!" }
   return $bValid
 }
