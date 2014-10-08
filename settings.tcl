@@ -8,6 +8,6 @@ set nMaxFrequency 157000000
 set nMaxLevelDet -80    
 #carrier must be higher than this level to be detected as on after off should be higher
 # than the value before to achieve an hysteresis
-set nMinLevelDet -100	
-set TOTestInterval 5
-set nTestCount 5
+set nMinLevelDet -80	
+set TOTestInterval 4
+set nTestCount 4
