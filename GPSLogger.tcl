@@ -27,6 +27,10 @@ set outFileName "[clock format [clock seconds] -format "%Y-%m-%dT%H_%M_%S"].csv"
 puts "Writing File $basedir/$outFileName\n"
 set outfile [open "$basedir/$outFileName" "w"]
 
+set logGPSLogFileName "[clock format [clock seconds] -format "%Y-%m-%dT%H_%M_%S"].log"
+puts "Writing GPS LogFile $basedir/$logGPSLogFileName\n"
+set gpsLogfile [open "$basedir/$logGPSLogFileName" "w"]
+
 puts $outfile "time;frq max;maxLevel;frq min;minLevel;GPSTime;Lat;Lon;Speed;Course;GPSValid;"
 
 set bAborted 0
@@ -56,7 +60,7 @@ while { $bAborted == 0 } {
 	}
 	
 	set spawn_id $spwnGPS
-	set bValid [ReadGPSPos fLat fLon fSpeed nCourse strDate strGPSDesc]
+	set bValid [ReadGPSPos fLat fLon fSpeed nCourse strDate strGPSDesc $gpsLogfile ]
 
 	EchoISO8601Date
 	puts "  [format "%f MHz" $nFreqMax] max: [format "%5.1f dBm" $nLevelMax] min: [format "%5.1f dBm" $nLevelMin]"
@@ -69,9 +73,11 @@ while { $bAborted == 0 } {
 	set strTempOut [ string map { . , } $strTempOut ] 
 	puts $outfile $strTempOut
 	flush $outfile
+	flush $gpsLogfile
 }
 
 close $outfile
+close $gpsLogfile
 set spawn_id $spwnGPS
 close 
 

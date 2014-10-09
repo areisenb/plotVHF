@@ -20,15 +20,16 @@ proc convertDateTime { strNMEATime strNMEADate strISO8601 strCSV } {
   upvar $strCSV strDatCSV
   #ISO8601 Format:  "%Y-%m-%dT%H:%M:%S"
   #CSV Fomat:       "%Y-%m-%d %H:%M:%S"
-  regexp "(\[0-9]\[0-9])(\[0-9]\[0-9])(\[0-9]\[0-9])\." $strNMEATime ignore hrs min sec
+
   regexp "(\[0-9]\[0-9])(\[0-9]\[0-9])(\[0-9]\[0-9])" $strNMEADate ignore day mon yrs
-  
+  regexp "(\[0-9]\[0-9])(\[0-9]\[0-9])(\[0-9]\[0-9])\." $strNMEATime ignore hrs min sec
+
   set yrs [expr $yrs + 2000]
-  set strDatISO8601 "[format "%04d-%02d-%02dT%02d:%02d:%02d" $yrs $mon $day $hrs $min $sec]"
-  set strDatCSV "[format "%04d-%02d-%02d %02d:%02d:%02d" $yrs $mon $day $hrs $min $sec]"
+  set strDatISO8601 "[format "%04d-%02d-%sT%s:%s:%s" $yrs $mon $day $hrs $min $sec]"
+  set strDatCSV "[format "%04d-%02d-%s %s:%s:%s" $yrs $mon $day $hrs $min $sec]"
 }
 
-proc ReadGPSPos { fLat fLon fSpeed nCourse strDate strDesc } {
+proc ReadGPSPos { fLat fLon fSpeed nCourse strDate strDesc gpsLogFile } {
   upvar $fLat fLocLat
   upvar $fLon fLocLon
   upvar $fSpeed fLocSpeed
@@ -47,6 +48,12 @@ proc ReadGPSPos { fLat fLon fSpeed nCourse strDate strDesc } {
   set strLocDate "1970-01-0-01 00:00:00"
   set bValid 0
 
+  expect "GPGSV*"
+  if { $gpsLogFile > 0 } {
+     puts $gpsLogFile "\$timestamp; [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%S"]"
+	 puts $gpsLogFile $expect_out(buffer)
+  }
+  
   expect {
     -re $strGPRMC { 
 	  #puts "Recommended Minimum Sentence C: $expect_out(0,string)" 
@@ -68,6 +75,12 @@ proc ReadGPSPos { fLat fLon fSpeed nCourse strDate strDesc } {
     #}
     timeout {puts "no GPS minimum dataset received" }
   }
+  
+  if { $gpsLogFile > 0 } {
+     puts $gpsLogFile "\$timestamp; [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%S"]"
+	 puts $gpsLogFile $expect_out(buffer)
+  }
+
   set strLocDesc "[format "Pos: %8.5f/%8.5f deg, Speed: %5.2f, Course: %3d GPSClk: %s" $fLocLat $fLocLon $fLocSpeed $nLocCourse $strISO8601Date]"
   if { $bValid == 0 } { append strLocDesc " INVALID!!!" }
   return $bValid
